@@ -26,10 +26,19 @@ interface SystemUser {
   status: 'active' | 'inactive';
   lastActivity: string;
   createdAt: string;
+  password?: string;
+}
+
+interface LoginCredentials {
+  email: string;
+  password: string;
 }
 
 const Index = () => {
-  const [currentUser, setCurrentUser] = useState<User>({ id: '1', role: 'admin' });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
+  const [loginForm, setLoginForm] = useState<LoginCredentials>({ email: '', password: '' });
+  const [loginError, setLoginError] = useState('');
   const [activeSection, setActiveSection] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
@@ -42,32 +51,35 @@ const Index = () => {
     {
       id: '1',
       fullName: 'Иванов Алексей Иванович',
-      email: 'a.ivanov@company.ru',
+      email: 'admin@company.ru',
       department: 'IT отдел',
       role: 'admin',
       status: 'active',
       lastActivity: '2 минуты назад',
-      createdAt: '15.01.2024'
+      createdAt: '15.01.2024',
+      password: 'admin123'
     },
     {
       id: '2',
       fullName: 'Петрова Мария Сергеевна',
-      email: 'm.petrova@company.ru',
+      email: 'user@company.ru',
       department: 'Бухгалтерия',
       role: 'user',
       status: 'active',
       lastActivity: '1 час назад',
-      createdAt: '20.01.2024'
+      createdAt: '20.01.2024',
+      password: 'user123'
     },
     {
       id: '3',
       fullName: 'Сидоров Петр Петрович',
-      email: 'p.sidorov@company.ru',
+      email: 'viewer@company.ru',
       department: 'Склад',
       role: 'viewer',
-      status: 'inactive',
+      status: 'active',
       lastActivity: '3 дня назад',
-      createdAt: '10.01.2024'
+      createdAt: '10.01.2024',
+      password: 'viewer123'
     },
     {
       id: '4',
@@ -77,7 +89,8 @@ const Index = () => {
       role: 'user',
       status: 'active',
       lastActivity: '30 минут назад',
-      createdAt: '25.01.2024'
+      createdAt: '25.01.2024',
+      password: 'hr123'
     },
     {
       id: '5',
@@ -87,7 +100,8 @@ const Index = () => {
       role: 'admin',
       status: 'active',
       lastActivity: '5 минут назад',
-      createdAt: '12.01.2024'
+      createdAt: '12.01.2024',
+      password: 'it123'
     }
   ]);
   const [newUser, setNewUser] = useState({
@@ -126,7 +140,8 @@ const Index = () => {
       role: newUser.role,
       status: 'active',
       lastActivity: 'Только что создан',
-      createdAt: new Date().toLocaleDateString('ru-RU')
+      createdAt: new Date().toLocaleDateString('ru-RU'),
+      password: newUser.password
     };
     
     setUsers(prev => [...prev, newSystemUser]);
@@ -202,12 +217,103 @@ const Index = () => {
     { id: 'print', label: 'Печать', icon: 'Printer' },
   ];
 
-  const toggleRole = () => {
-    setCurrentUser(prev => ({ 
-      ...prev, 
-      role: prev.role === 'admin' ? 'user' : 'admin' 
-    }));
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+
+    const user = users.find(u => 
+      u.email === loginForm.email && 
+      u.password === loginForm.password && 
+      u.status === 'active'
+    );
+
+    if (user) {
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      setLoginForm({ email: '', password: '' });
+      
+      // Обновляем время последней активности
+      setUsers(prev => prev.map(u => 
+        u.id === user.id 
+          ? { ...u, lastActivity: 'Только что' }
+          : u
+      ));
+    } else {
+      setLoginError('Неверный email или пароль, либо аккаунт неактивен');
+    }
   };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setActiveSection('dashboard');
+  };
+
+  const toggleRole = () => {
+    if (currentUser) {
+      const newRole = currentUser.role === 'admin' ? 'user' : 'admin';
+      const updatedUser = { ...currentUser, role: newRole as 'admin' | 'user' | 'viewer' };
+      setCurrentUser(updatedUser);
+    }
+  };
+
+  // Login Screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-primary mb-2">
+              Система управления паспортами
+            </CardTitle>
+            <p className="text-gray-600">Введите учетные данные для входа</p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="loginEmail">Email</Label>
+                <Input
+                  id="loginEmail"
+                  type="email"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="admin@company.ru"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="loginPassword">Пароль</Label>
+                <Input
+                  id="loginPassword"
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Введите пароль"
+                  required
+                />
+              </div>
+              {loginError && (
+                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                  {loginError}
+                </div>
+              )}
+              <Button type="submit" className="w-full">
+                Войти
+              </Button>
+            </form>
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="text-sm font-medium text-blue-900 mb-2">Тестовые учетные данные:</h3>
+              <div className="text-xs text-blue-700 space-y-1">
+                <div><strong>Администратор:</strong> admin@company.ru / admin123</div>
+                <div><strong>Пользователь:</strong> user@company.ru / user123</div>
+                <div><strong>Только чтение:</strong> viewer@company.ru / viewer123</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -220,18 +326,24 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-600">
+              Добро пожаловать, <span className="font-medium">{currentUser?.fullName}</span>
+            </div>
+            <Badge variant="outline">
+              {getRoleLabel(currentUser?.role || 'user')}
+            </Badge>
             <Button
               variant="outline"
               size="sm"
-              onClick={toggleRole}
+              onClick={handleLogout}
               className="flex items-center space-x-2"
             >
-              <Icon name="UserCog" size={16} />
-              <span>{currentUser.role === 'admin' ? 'Администратор' : 'Пользователь'}</span>
+              <Icon name="LogOut" size={16} />
+              <span>Выйти</span>
             </Button>
             <Avatar>
               <AvatarFallback className="bg-primary text-primary-foreground">
-                {currentUser.role === 'admin' ? 'А' : 'П'}
+                {currentUser?.fullName.split(' ').map(n => n[0]).join('') || 'U'}
               </AvatarFallback>
             </Avatar>
           </div>
