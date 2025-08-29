@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 
@@ -34,14 +35,10 @@ const Index = () => {
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const [newUser, setNewUser] = useState({
-    fullName: '',
-    email: '',
-    department: '',
-    role: 'user' as 'admin' | 'user' | 'viewer'
-  });
-
-  const users: SystemUser[] = [
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
+  const [userToDelete, setUserToDelete] = useState<SystemUser | null>(null);
+  const [users, setUsers] = useState<SystemUser[]>([
     {
       id: '1',
       fullName: 'Иванов Алексей Иванович',
@@ -92,7 +89,17 @@ const Index = () => {
       lastActivity: '5 минут назад',
       createdAt: '12.01.2024'
     }
-  ];
+  ]);
+  const [newUser, setNewUser] = useState({
+    fullName: '',
+    email: '',
+    department: '',
+    role: 'user' as 'admin' | 'user' | 'viewer',
+    password: '',
+    confirmPassword: ''
+  });
+
+
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,14 +112,53 @@ const Index = () => {
   });
 
   const handleAddUser = () => {
-    console.log('Добавление пользователя:', newUser);
+    if (newUser.password !== newUser.confirmPassword) {
+      alert('Пароли не совпадают!');
+      return;
+    }
+    
+    const newId = (Math.max(...users.map(u => parseInt(u.id))) + 1).toString();
+    const newSystemUser: SystemUser = {
+      id: newId,
+      fullName: newUser.fullName,
+      email: newUser.email,
+      department: newUser.department,
+      role: newUser.role,
+      status: 'active',
+      lastActivity: 'Только что создан',
+      createdAt: new Date().toLocaleDateString('ru-RU')
+    };
+    
+    setUsers(prev => [...prev, newSystemUser]);
     setIsAddUserOpen(false);
     setNewUser({
       fullName: '',
       email: '',
       department: '',
-      role: 'user'
+      role: 'user',
+      password: '',
+      confirmPassword: ''
     });
+  };
+
+  const handleEditUser = (user: SystemUser) => {
+    setEditingUser(user);
+    setIsEditUserOpen(true);
+  };
+
+  const handleUpdateUser = () => {
+    if (!editingUser) return;
+    
+    setUsers(prev => prev.map(user => 
+      user.id === editingUser.id ? editingUser : user
+    ));
+    setIsEditUserOpen(false);
+    setEditingUser(null);
+  };
+
+  const handleDeleteUser = (user: SystemUser) => {
+    setUsers(prev => prev.filter(u => u.id !== user.id));
+    setUserToDelete(null);
   };
 
   const getRoleLabel = (role: string) => {
@@ -134,7 +180,7 @@ const Index = () => {
   };
 
   const stats = [
-    { title: 'Всего пользователей', value: '148', icon: 'Users', color: 'text-blue-600' },
+    { title: 'Всего пользователей', value: users.length.toString(), icon: 'Users', color: 'text-blue-600' },
     { title: 'Рабочих мест', value: '89', icon: 'Monitor', color: 'text-green-600' },
     { title: 'Комплектующих', value: '324', icon: 'HardDrive', color: 'text-purple-600' },
     { title: 'Активных сессий', value: '23', icon: 'Activity', color: 'text-orange-600' },
@@ -413,6 +459,26 @@ const Index = () => {
                           </SelectContent>
                         </Select>
                       </div>
+                      <div>
+                        <Label htmlFor="password">Пароль</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={newUser.password}
+                          onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                          placeholder="Введите пароль"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={newUser.confirmPassword}
+                          onChange={(e) => setNewUser(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          placeholder="Повторите пароль"
+                        />
+                      </div>
                       <div className="flex justify-end space-x-2 pt-4">
                         <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
                           Отмена
@@ -516,12 +582,34 @@ const Index = () => {
                           <TableCell className="text-sm text-gray-600">{user.createdAt}</TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
                                 <Icon name="Edit" size={14} />
                               </Button>
-                              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                                <Icon name="Trash2" size={14} />
-                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                                    <Icon name="Trash2" size={14} />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Удаление пользователя</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Вы уверены, что хотите удалить пользователя "{user.fullName}"? 
+                                      Это действие нельзя отменить.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteUser(user)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Удалить
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -591,6 +679,87 @@ const Index = () => {
               </div>
             </div>
           )}
+
+          {/* Edit User Dialog */}
+          <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Редактировать пользователя</DialogTitle>
+              </DialogHeader>
+              {editingUser && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="editFullName">Полное имя</Label>
+                    <Input
+                      id="editFullName"
+                      value={editingUser.fullName}
+                      onChange={(e) => setEditingUser(prev => prev ? { ...prev, fullName: e.target.value } : null)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="editEmail">Email</Label>
+                    <Input
+                      id="editEmail"
+                      type="email"
+                      value={editingUser.email}
+                      onChange={(e) => setEditingUser(prev => prev ? { ...prev, email: e.target.value } : null)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="editDepartment">Отдел</Label>
+                    <Input
+                      id="editDepartment"
+                      value={editingUser.department}
+                      onChange={(e) => setEditingUser(prev => prev ? { ...prev, department: e.target.value } : null)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="editRole">Роль</Label>
+                    <Select 
+                      value={editingUser.role} 
+                      onValueChange={(value: 'admin' | 'user' | 'viewer') => 
+                        setEditingUser(prev => prev ? { ...prev, role: value } : null)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Администратор</SelectItem>
+                        <SelectItem value="user">Пользователь</SelectItem>
+                        <SelectItem value="viewer">Только чтение</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="editStatus">Статус</Label>
+                    <Select 
+                      value={editingUser.status} 
+                      onValueChange={(value: 'active' | 'inactive') => 
+                        setEditingUser(prev => prev ? { ...prev, status: value } : null)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Активен</SelectItem>
+                        <SelectItem value="inactive">Неактивен</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline" onClick={() => setIsEditUserOpen(false)}>
+                      Отмена
+                    </Button>
+                    <Button onClick={handleUpdateUser}>
+                      Сохранить
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Other sections placeholder */}
           {activeSection !== 'dashboard' && activeSection !== 'users' && (
