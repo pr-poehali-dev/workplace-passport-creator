@@ -1375,7 +1375,7 @@ const Index = () => {
             </div>
           )}
 
-              {/* Add Workplace Dialog */}
+
               <Dialog open={isAddWorkplaceOpen} onOpenChange={setIsAddWorkplaceOpen}>
                 <DialogContent className="sm:max-w-2xl">
                   <DialogHeader>
