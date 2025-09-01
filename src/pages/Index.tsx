@@ -34,6 +34,36 @@ interface LoginCredentials {
   password: string;
 }
 
+interface Workplace {
+  id: string;
+  userId?: string;
+  computerNumber: string;
+  ipAddress: string;
+  sealNumber: string;
+  processor: string;
+  hardDrive: string;
+  ramAmount: string;
+  videoAdapter: string;
+  operatingSystem: string;
+  assemblyDate: string;
+  location: string;
+  status: 'active' | 'inactive' | 'maintenance';
+}
+
+interface WorkplaceFormData {
+  computerNumber: string;
+  ipAddress: string;
+  sealNumber: string;
+  processor: string;
+  hardDrive: string;
+  ramAmount: string;
+  videoAdapter: string;
+  operatingSystem: string;
+  assemblyDate: string;
+  location: string;
+  status: 'active' | 'inactive' | 'maintenance';
+}
+
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
@@ -104,6 +134,39 @@ const Index = () => {
       password: 'it123'
     }
   ]);
+
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([
+    {
+      id: '1',
+      userId: '2',
+      computerNumber: 'PC-001',
+      ipAddress: '192.168.1.101',
+      sealNumber: 'SEAL-001',
+      processor: 'Intel Core i5-12400F',
+      hardDrive: 'SSD 512GB Samsung 980',
+      ramAmount: '16 ГБ DDR4-3200',
+      videoAdapter: 'NVIDIA GTX 1660 Super',
+      operatingSystem: 'Windows 11 Pro',
+      assemblyDate: '15.01.2024',
+      location: 'Кабинет 205',
+      status: 'active'
+    },
+    {
+      id: '2',
+      computerNumber: 'PC-002',
+      ipAddress: '192.168.1.102',
+      sealNumber: 'SEAL-002',
+      processor: 'AMD Ryzen 5 5600X',
+      hardDrive: 'SSD 256GB + HDD 1TB',
+      ramAmount: '8 ГБ DDR4-3200',
+      videoAdapter: 'Встроенная AMD Radeon',
+      operatingSystem: 'Windows 10 Pro',
+      assemblyDate: '20.01.2024',
+      location: 'Кабинет 101',
+      status: 'active'
+    }
+  ]);
+
   const [newUser, setNewUser] = useState({
     fullName: '',
     email: '',
@@ -111,6 +174,24 @@ const Index = () => {
     role: 'user' as 'admin' | 'user' | 'viewer',
     password: '',
     confirmPassword: ''
+  });
+
+  const [isAddWorkplaceOpen, setIsAddWorkplaceOpen] = useState(false);
+  const [isEditWorkplaceOpen, setIsEditWorkplaceOpen] = useState(false);
+  const [editingWorkplace, setEditingWorkplace] = useState<Workplace | null>(null);
+  const [workplaceToDelete, setWorkplaceToDelete] = useState<Workplace | null>(null);
+  const [newWorkplace, setNewWorkplace] = useState<WorkplaceFormData>({
+    computerNumber: '',
+    ipAddress: '',
+    sealNumber: '',
+    processor: '',
+    hardDrive: '',
+    ramAmount: '',
+    videoAdapter: '',
+    operatingSystem: '',
+    assemblyDate: '',
+    location: '',
+    status: 'active'
   });
 
 
@@ -176,6 +257,156 @@ const Index = () => {
     setUserToDelete(null);
   };
 
+  const handleAddWorkplace = () => {
+    const workplace: Workplace = {
+      id: Date.now().toString(),
+      ...newWorkplace
+    };
+    
+    setWorkplaces(prev => [...prev, workplace]);
+    setNewWorkplace({
+      computerNumber: '',
+      ipAddress: '',
+      sealNumber: '',
+      processor: '',
+      hardDrive: '',
+      ramAmount: '',
+      videoAdapter: '',
+      operatingSystem: '',
+      assemblyDate: '',
+      location: '',
+      status: 'active'
+    });
+    setIsAddWorkplaceOpen(false);
+  };
+
+  const handleEditWorkplace = (workplace: Workplace) => {
+    setEditingWorkplace(workplace);
+    setIsEditWorkplaceOpen(true);
+  };
+
+  const handleUpdateWorkplace = () => {
+    if (!editingWorkplace) return;
+    
+    setWorkplaces(prev => prev.map(wp => 
+      wp.id === editingWorkplace.id ? editingWorkplace : wp
+    ));
+    setIsEditWorkplaceOpen(false);
+    setEditingWorkplace(null);
+  };
+
+  const handleDeleteWorkplace = (workplace: Workplace) => {
+    setWorkplaces(prev => prev.filter(wp => wp.id !== workplace.id));
+    setWorkplaceToDelete(null);
+  };
+
+  const handleAssignWorkplace = (workplaceId: string, userId?: string) => {
+    setWorkplaces(prev => prev.map(wp => 
+      wp.id === workplaceId ? { ...wp, userId } : wp
+    ));
+  };
+
+  const getWorkplaceUser = (userId?: string) => {
+    return userId ? users.find(u => u.id === userId) : null;
+  };
+
+  const handlePrintPassport = (workplace: Workplace) => {
+    const user = getWorkplaceUser(workplace.userId);
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Паспорт рабочего места ${workplace.computerNumber}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+            .info-row { display: flex; margin: 10px 0; }
+            .label { font-weight: bold; width: 200px; }
+            .value { flex: 1; border-bottom: 1px dotted #000; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>ПАСПОРТ РАБОЧЕГО МЕСТА</h1>
+            <h2>${workplace.computerNumber}</h2>
+          </div>
+          
+          <h3>Информация о пользователе:</h3>
+          <div class="info-row">
+            <span class="label">ФИО:</span>
+            <span class="value">${user?.fullName || 'Не назначен'}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Отдел:</span>
+            <span class="value">${user?.department || 'Не назначен'}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Должность:</span>
+            <span class="value">${getRoleLabel(user?.role || 'user')}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Email:</span>
+            <span class="value">${user?.email || 'Не назначен'}</span>
+          </div>
+          
+          <h3>Техническая информация:</h3>
+          <div class="info-row">
+            <span class="label">Номер компьютера:</span>
+            <span class="value">${workplace.computerNumber}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">IP адрес:</span>
+            <span class="value">${workplace.ipAddress}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Номер пломбы:</span>
+            <span class="value">${workplace.sealNumber}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Процессор:</span>
+            <span class="value">${workplace.processor}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Жесткий диск:</span>
+            <span class="value">${workplace.hardDrive}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Оперативная память:</span>
+            <span class="value">${workplace.ramAmount}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Видео адаптер:</span>
+            <span class="value">${workplace.videoAdapter}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Операционная система:</span>
+            <span class="value">${workplace.operatingSystem}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Дата сборки:</span>
+            <span class="value">${workplace.assemblyDate}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Местоположение:</span>
+            <span class="value">${workplace.location}</span>
+          </div>
+          
+          <div style="margin-top: 40px; text-align: center;">
+            <p>Дата печати: ${new Date().toLocaleDateString('ru-RU')}</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'admin': return 'Администратор';
@@ -196,9 +427,9 @@ const Index = () => {
 
   const stats = [
     { title: 'Всего пользователей', value: users.length.toString(), icon: 'Users', color: 'text-blue-600' },
-    { title: 'Рабочих мест', value: '89', icon: 'Monitor', color: 'text-green-600' },
-    { title: 'Комплектующих', value: '324', icon: 'HardDrive', color: 'text-purple-600' },
-    { title: 'Активных сессий', value: '23', icon: 'Activity', color: 'text-orange-600' },
+    { title: 'Рабочих мест', value: workplaces.length.toString(), icon: 'Monitor', color: 'text-green-600' },
+    { title: 'Назначенных мест', value: workplaces.filter(wp => wp.userId).length.toString(), icon: 'HardDrive', color: 'text-purple-600' },
+    { title: 'Активных систем', value: workplaces.filter(wp => wp.status === 'active').length.toString(), icon: 'Activity', color: 'text-orange-600' },
   ];
 
   const recentActivity = [
@@ -873,8 +1104,351 @@ const Index = () => {
             </DialogContent>
           </Dialog>
 
+          {/* Workplaces Section */}
+          {activeSection === 'workplaces' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold">Рабочие места</h1>
+                <div className="flex space-x-4">
+                  <Button onClick={() => setIsAddWorkplaceOpen(true)}>
+                    <Icon name="Plus" size={16} className="mr-2" />
+                    Добавить рабочее место
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Номер ПК</TableHead>
+                      <TableHead>Пользователь</TableHead>
+                      <TableHead>IP адрес</TableHead>
+                      <TableHead>Местоположение</TableHead>
+                      <TableHead>Статус</TableHead>
+                      <TableHead>Действия</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {workplaces.map((workplace) => {
+                      const assignedUser = getWorkplaceUser(workplace.userId);
+                      return (
+                        <TableRow key={workplace.id}>
+                          <TableCell className="font-medium">{workplace.computerNumber}</TableCell>
+                          <TableCell>
+                            {assignedUser ? (
+                              <div>
+                                <div className="font-medium">{assignedUser.fullName}</div>
+                                <div className="text-sm text-gray-500">{assignedUser.department}</div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">Не назначен</span>
+                            )}
+                          </TableCell>
+                          <TableCell>{workplace.ipAddress}</TableCell>
+                          <TableCell>{workplace.location}</TableCell>
+                          <TableCell>
+                            <Badge variant={workplace.status === 'active' ? 'default' : workplace.status === 'maintenance' ? 'secondary' : 'outline'}>
+                              {workplace.status === 'active' ? 'Активный' : workplace.status === 'maintenance' ? 'Обслуживание' : 'Неактивный'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button variant="outline" size="sm" onClick={() => handleEditWorkplace(workplace)}>
+                                <Icon name="Edit" size={14} />
+                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Icon name="User" size={14} />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Назначить пользователя</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <Select value={workplace.userId || ''} onValueChange={(value) => handleAssignWorkplace(workplace.id, value || undefined)}>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Выберите пользователя" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="">Не назначать</SelectItem>
+                                        {users.map((user) => (
+                                          <SelectItem key={user.id} value={user.id}>
+                                            {user.fullName} - {user.department}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                              <Button variant="outline" size="sm" onClick={() => handlePrintPassport(workplace)}>
+                                <Icon name="Printer" size={14} />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm" onClick={() => setWorkplaceToDelete(workplace)}>
+                                    <Icon name="Trash2" size={14} />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Удалить рабочее место?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Это действие нельзя отменить. Рабочее место {workplace.computerNumber} будет удалено безвозвратно.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => workplaceToDelete && handleDeleteWorkplace(workplaceToDelete)}>
+                                      Удалить
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Add Workplace Dialog */}
+              <Dialog open={isAddWorkplaceOpen} onOpenChange={setIsAddWorkplaceOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Добавить рабочее место</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="computerNumber">Номер компьютера</Label>
+                      <Input
+                        id="computerNumber"
+                        value={newWorkplace.computerNumber}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, computerNumber: e.target.value }))}
+                        placeholder="PC-001"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ipAddress">IP адрес</Label>
+                      <Input
+                        id="ipAddress"
+                        value={newWorkplace.ipAddress}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, ipAddress: e.target.value }))}
+                        placeholder="192.168.1.101"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sealNumber">Номер пломбы</Label>
+                      <Input
+                        id="sealNumber"
+                        value={newWorkplace.sealNumber}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, sealNumber: e.target.value }))}
+                        placeholder="SEAL-001"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="location">Местоположение</Label>
+                      <Input
+                        id="location"
+                        value={newWorkplace.location}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, location: e.target.value }))}
+                        placeholder="Кабинет 205"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="processor">Процессор</Label>
+                      <Input
+                        id="processor"
+                        value={newWorkplace.processor}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, processor: e.target.value }))}
+                        placeholder="Intel Core i5-12400F"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="hardDrive">Жесткий диск</Label>
+                      <Input
+                        id="hardDrive"
+                        value={newWorkplace.hardDrive}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, hardDrive: e.target.value }))}
+                        placeholder="SSD 512GB Samsung 980"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ramAmount">Оперативная память</Label>
+                      <Input
+                        id="ramAmount"
+                        value={newWorkplace.ramAmount}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, ramAmount: e.target.value }))}
+                        placeholder="16 ГБ DDR4-3200"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="videoAdapter">Видео адаптер</Label>
+                      <Input
+                        id="videoAdapter"
+                        value={newWorkplace.videoAdapter}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, videoAdapter: e.target.value }))}
+                        placeholder="NVIDIA GTX 1660 Super"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="operatingSystem">Операционная система</Label>
+                      <Input
+                        id="operatingSystem"
+                        value={newWorkplace.operatingSystem}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, operatingSystem: e.target.value }))}
+                        placeholder="Windows 11 Pro"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="assemblyDate">Дата сборки</Label>
+                      <Input
+                        id="assemblyDate"
+                        value={newWorkplace.assemblyDate}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, assemblyDate: e.target.value }))}
+                        placeholder="15.01.2024"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Label htmlFor="status">Статус</Label>
+                      <Select value={newWorkplace.status} onValueChange={(value: 'active' | 'inactive' | 'maintenance') => setNewWorkplace(prev => ({ ...prev, status: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Активный</SelectItem>
+                          <SelectItem value="inactive">Неактивный</SelectItem>
+                          <SelectItem value="maintenance">Обслуживание</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsAddWorkplaceOpen(false)}>Отмена</Button>
+                    <Button onClick={handleAddWorkplace}>Добавить</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Edit Workplace Dialog */}
+              <Dialog open={isEditWorkplaceOpen} onOpenChange={setIsEditWorkplaceOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Редактировать рабочее место</DialogTitle>
+                  </DialogHeader>
+                  {editingWorkplace && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="editComputerNumber">Номер компьютера</Label>
+                        <Input
+                          id="editComputerNumber"
+                          value={editingWorkplace.computerNumber}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, computerNumber: e.target.value } : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editIpAddress">IP адрес</Label>
+                        <Input
+                          id="editIpAddress"
+                          value={editingWorkplace.ipAddress}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, ipAddress: e.target.value } : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editSealNumber">Номер пломбы</Label>
+                        <Input
+                          id="editSealNumber"
+                          value={editingWorkplace.sealNumber}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, sealNumber: e.target.value } : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editLocation">Местоположение</Label>
+                        <Input
+                          id="editLocation"
+                          value={editingWorkplace.location}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, location: e.target.value } : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editProcessor">Процессор</Label>
+                        <Input
+                          id="editProcessor"
+                          value={editingWorkplace.processor}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, processor: e.target.value } : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editHardDrive">Жесткий диск</Label>
+                        <Input
+                          id="editHardDrive"
+                          value={editingWorkplace.hardDrive}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, hardDrive: e.target.value } : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editRamAmount">Оперативная память</Label>
+                        <Input
+                          id="editRamAmount"
+                          value={editingWorkplace.ramAmount}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, ramAmount: e.target.value } : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editVideoAdapter">Видео адаптер</Label>
+                        <Input
+                          id="editVideoAdapter"
+                          value={editingWorkplace.videoAdapter}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, videoAdapter: e.target.value } : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editOperatingSystem">Операционная система</Label>
+                        <Input
+                          id="editOperatingSystem"
+                          value={editingWorkplace.operatingSystem}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, operatingSystem: e.target.value } : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editAssemblyDate">Дата сборки</Label>
+                        <Input
+                          id="editAssemblyDate"
+                          value={editingWorkplace.assemblyDate}
+                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, assemblyDate: e.target.value } : null)}
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <Label htmlFor="editStatus">Статус</Label>
+                        <Select value={editingWorkplace.status} onValueChange={(value: 'active' | 'inactive' | 'maintenance') => setEditingWorkplace(prev => prev ? { ...prev, status: value } : null)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Активный</SelectItem>
+                            <SelectItem value="inactive">Неактивный</SelectItem>
+                            <SelectItem value="maintenance">Обслуживание</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsEditWorkplaceOpen(false)}>Отмена</Button>
+                    <Button onClick={handleUpdateWorkplace}>Сохранить</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
+
           {/* Other sections placeholder */}
-          {activeSection !== 'dashboard' && activeSection !== 'users' && (
+          {activeSection !== 'dashboard' && activeSection !== 'users' && activeSection !== 'workplaces' && (
             <div className="flex items-center justify-center h-96">
               <div className="text-center">
                 <Icon name="Construction" size={48} className="mx-auto mb-4 text-gray-400" />
