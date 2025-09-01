@@ -194,6 +194,10 @@ const Index = () => {
     status: 'active'
   });
 
+  const [isAssignUserOpen, setIsAssignUserOpen] = useState(false);
+  const [assigningWorkplace, setAssigningWorkplace] = useState<Workplace | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+
 
 
   const filteredUsers = users.filter(user => {
@@ -300,10 +304,22 @@ const Index = () => {
     setWorkplaceToDelete(null);
   };
 
-  const handleAssignWorkplace = (workplaceId: string, userId?: string) => {
+  const handleOpenAssignUser = (workplace: Workplace) => {
+    setAssigningWorkplace(workplace);
+    setSelectedUserId(workplace.userId || '');
+    setIsAssignUserOpen(true);
+  };
+
+  const handleAssignWorkplace = () => {
+    if (!assigningWorkplace) return;
+    
     setWorkplaces(prev => prev.map(wp => 
-      wp.id === workplaceId ? { ...wp, userId } : wp
+      wp.id === assigningWorkplace.id ? { ...wp, userId: selectedUserId || undefined } : wp
     ));
+    
+    setIsAssignUserOpen(false);
+    setAssigningWorkplace(null);
+    setSelectedUserId('');
   };
 
   const getWorkplaceUser = (userId?: string) => {
@@ -1157,33 +1173,9 @@ const Index = () => {
                               <Button variant="outline" size="sm" onClick={() => handleEditWorkplace(workplace)}>
                                 <Icon name="Edit" size={14} />
                               </Button>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="outline" size="sm">
-                                    <Icon name="User" size={14} />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Назначить пользователя</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <Select value={workplace.userId || ''} onValueChange={(value) => handleAssignWorkplace(workplace.id, value || undefined)}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Выберите пользователя" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="">Не назначать</SelectItem>
-                                        {users.map((user) => (
-                                          <SelectItem key={user.id} value={user.id}>
-                                            {user.fullName} - {user.department}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
+                              <Button variant="outline" size="sm" onClick={() => handleOpenAssignUser(workplace)}>
+                                <Icon name="User" size={14} />
+                              </Button>
                               <Button variant="outline" size="sm" onClick={() => handlePrintPassport(workplace)}>
                                 <Icon name="Printer" size={14} />
                               </Button>
@@ -1441,6 +1433,52 @@ const Index = () => {
                   <div className="flex justify-end space-x-2">
                     <Button variant="outline" onClick={() => setIsEditWorkplaceOpen(false)}>Отмена</Button>
                     <Button onClick={handleUpdateWorkplace}>Сохранить</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Assign User Dialog */}
+              <Dialog open={isAssignUserOpen} onOpenChange={setIsAssignUserOpen}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>
+                      Назначить пользователя для {assigningWorkplace?.computerNumber}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="assignUser">Выберите пользователя</Label>
+                      <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите пользователя" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Не назначать</SelectItem>
+                          {users.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.fullName} - {user.department}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {selectedUserId && (
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <div className="text-sm">
+                          <div className="font-medium">{users.find(u => u.id === selectedUserId)?.fullName}</div>
+                          <div className="text-gray-600">{users.find(u => u.id === selectedUserId)?.department}</div>
+                          <div className="text-gray-600">{users.find(u => u.id === selectedUserId)?.email}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsAssignUserOpen(false)}>
+                      Отмена
+                    </Button>
+                    <Button onClick={handleAssignWorkplace}>
+                      {selectedUserId ? 'Назначить' : 'Убрать назначение'}
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>
