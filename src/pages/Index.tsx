@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -208,6 +208,10 @@ const Index = () => {
     notifications: true,
     language: 'ru'
   });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', settings.theme);
+  }, [settings.theme]);
 
   const [notification, setNotification] = useState<{
     message: string;
@@ -1316,9 +1320,6 @@ const Index = () => {
                               <Button variant="outline" size="sm" onClick={() => handleEditWorkplace(workplace)}>
                                 <Icon name="Edit" size={14} />
                               </Button>
-                              <Button variant="outline" size="sm" onClick={() => handleOpenAssignUser(workplace)}>
-                                <Icon name="User" size={14} />
-                              </Button>
                               <Button variant="outline" size="sm" onClick={() => handlePrintPassport(workplace)}>
                                 <Icon name="Printer" size={14} />
                               </Button>
@@ -1558,7 +1559,7 @@ const Index = () => {
                           onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, assemblyDate: e.target.value } : null)}
                         />
                       </div>
-                      <div className="col-span-2">
+                      <div>
                         <Label htmlFor="editStatus">Статус</Label>
                         <Select value={editingWorkplace.status} onValueChange={(value: 'active' | 'inactive' | 'maintenance') => setEditingWorkplace(prev => prev ? { ...prev, status: value } : null)}>
                           <SelectTrigger>
@@ -1571,6 +1572,25 @@ const Index = () => {
                           </SelectContent>
                         </Select>
                       </div>
+                      <div>
+                        <Label htmlFor="editAssignedUser">Назначить пользователя</Label>
+                        <Select 
+                          value={editingWorkplace.userId || ''} 
+                          onValueChange={(value) => setEditingWorkplace(prev => prev ? { ...prev, userId: value || undefined } : null)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Выберите пользователя" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Не назначать</SelectItem>
+                            {users.map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.fullName} - {user.department}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   )}
                   <div className="flex justify-end space-x-2">
@@ -1580,51 +1600,7 @@ const Index = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* Assign User Dialog */}
-              <Dialog open={isAssignUserOpen} onOpenChange={setIsAssignUserOpen}>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>
-                      Назначить пользователя для {assigningWorkplace?.computerNumber}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="assignUser">Выберите пользователя</Label>
-                      <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите пользователя" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">Не назначать</SelectItem>
-                          {users.map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.fullName} - {user.department}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {selectedUserId && (
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <div className="text-sm">
-                          <div className="font-medium">{users.find(u => u.id === selectedUserId)?.fullName}</div>
-                          <div className="text-gray-600">{users.find(u => u.id === selectedUserId)?.department}</div>
-                          <div className="text-gray-600">{users.find(u => u.id === selectedUserId)?.email}</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsAssignUserOpen(false)}>
-                      Отмена
-                    </Button>
-                    <Button onClick={handleConfirmAssignWorkplace}>
-                      {selectedUserId ? 'Назначить' : 'Убрать назначение'}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+
             </div>
           )}
 

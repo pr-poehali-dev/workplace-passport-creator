@@ -17,6 +17,30 @@
 
     --primary: 214 88% 27%;
     --primary-foreground: 0 0% 100%;
+  }
+
+  /* Blue Theme */
+  :root[data-theme="blue"] {
+    --primary: 214 88% 27%;
+    --primary-foreground: 0 0% 100%;
+  }
+
+  /* Green Theme */
+  :root[data-theme="green"] {
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+  }
+
+  /* Purple Theme */
+  :root[data-theme="purple"] {
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+  }
+
+  /* Orange Theme */
+  :root[data-theme="orange"] {
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
