@@ -173,7 +173,8 @@ const Index = () => {
     department: '',
     role: 'user' as 'admin' | 'user' | 'viewer',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    workplaceId: ''
   });
 
   const [isAddWorkplaceOpen, setIsAddWorkplaceOpen] = useState(false);
@@ -265,6 +266,17 @@ const Index = () => {
     };
     
     setUsers(prev => [...prev, newSystemUser]);
+    
+    // Назначаем рабочее место если выбрано
+    if (newUser.workplaceId) {
+      setWorkplaces(prev => prev.map(wp => 
+        wp.id === newUser.workplaceId ? { ...wp, userId: newId } : wp
+      ));
+      showNotification(`Пользователь ${newUser.fullName} создан и назначен на рабочее место`, 'success');
+    } else {
+      showNotification(`Пользователь ${newUser.fullName} создан успешно`, 'success');
+    }
+    
     setIsAddUserOpen(false);
     setNewUser({
       fullName: '',
@@ -272,7 +284,8 @@ const Index = () => {
       department: '',
       role: 'user',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      workplaceId: ''
     });
   };
 
@@ -963,6 +976,29 @@ const Index = () => {
                           placeholder="Повторите пароль"
                         />
                       </div>
+                      <div>
+                        <Label htmlFor="workplace">Назначить рабочее место</Label>
+                        <Select value={newUser.workplaceId} onValueChange={(value: string) => setNewUser(prev => ({ ...prev, workplaceId: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Выберите рабочее место (необязательно)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Не назначать</SelectItem>
+                            {workplaces
+                              .filter(wp => !wp.userId) // Показываем только свободные рабочие места
+                              .map((workplace) => (
+                                <SelectItem key={workplace.id} value={workplace.id}>
+                                  {workplace.computerNumber} - {workplace.location}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        {workplaces.filter(wp => !wp.userId).length === 0 && (
+                          <p className="text-sm text-gray-500 mt-1">
+                            Все рабочие места уже назначены
+                          </p>
+                        )}
+                      </div>
                       <div className="flex justify-end space-x-2 pt-4">
                         <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
                           Отмена
@@ -1245,21 +1281,20 @@ const Index = () => {
             </DialogContent>
           </Dialog>
 
-          {/* Workplaces Section */}
+          {/* Workplaces Section - Simplified */}
           {activeSection === 'workplaces' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Рабочие места</h1>
-                <Button onClick={() => setIsAddWorkplaceOpen(true)}>
-                  <Icon name="Plus" size={16} className="mr-2" />
-                  Добавить рабочее место
-                </Button>
+                <div className="text-sm text-gray-600">
+                  Для редактирования паспортов перейдите в раздел "Комплектующие"
+                </div>
               </div>
 
               <div className="flex space-x-4">
                 <div className="flex-1">
                   <Input
-                    placeholder="Поиск по номеру ПК, IP, местоположению или пользователю..."
+                    placeholder="Поиск по номеру ПК, пользователю или местоположению..."
                     value={workplaceSearchTerm}
                     onChange={(e) => setWorkplaceSearchTerm(e.target.value)}
                     className="w-full"
@@ -1278,78 +1313,67 @@ const Index = () => {
                 </Select>
               </div>
 
-              <div className="bg-white rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Номер ПК</TableHead>
-                      <TableHead>Пользователь</TableHead>
-                      <TableHead>IP адрес</TableHead>
-                      <TableHead>Местоположение</TableHead>
-                      <TableHead>Статус</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredWorkplaces.map((workplace) => {
-                      const assignedUser = getWorkplaceUser(workplace.userId);
-                      return (
-                        <TableRow key={workplace.id}>
-                          <TableCell className="font-medium">{workplace.computerNumber}</TableCell>
-                          <TableCell>
-                            {assignedUser ? (
-                              <div>
-                                <div className="font-medium">{assignedUser.fullName}</div>
-                                <div className="text-sm text-gray-500">{assignedUser.department}</div>
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">Не назначен</span>
-                            )}
-                          </TableCell>
-                          <TableCell>{workplace.ipAddress}</TableCell>
-                          <TableCell>{workplace.location}</TableCell>
-                          <TableCell>
-                            <Badge variant={workplace.status === 'active' ? 'default' : workplace.status === 'maintenance' ? 'secondary' : 'outline'}>
-                              {workplace.status === 'active' ? 'Активный' : workplace.status === 'maintenance' ? 'Обслуживание' : 'Неактивный'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button variant="outline" size="sm" onClick={() => handleEditWorkplace(workplace)} title="Редактировать">
-                                <Icon name="Edit" size={14} />
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={() => handlePrintPassport(workplace)} title="Печать паспорта">
-                                <Icon name="Printer" size={14} />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm" title="Удалить">
-                                    <Icon name="Trash2" size={14} />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Удалить рабочее место?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Это действие нельзя отменить. Рабочее место {workplace.computerNumber} будет удалено безвозвратно.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Отмена</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteWorkplace(workplace)}>
-                                      Удалить
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredWorkplaces.map((workplace) => {
+                  const assignedUser = getWorkplaceUser(workplace.userId);
+                  return (
+                    <Card key={workplace.id} className="hover:shadow-sm transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-bold text-lg">{workplace.computerNumber}</h3>
+                          <Badge variant={workplace.status === 'active' ? 'default' : workplace.status === 'maintenance' ? 'secondary' : 'outline'}>
+                            {workplace.status === 'active' ? 'Активный' : workplace.status === 'maintenance' ? 'Обслуживание' : 'Неактивный'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center space-x-2">
+                            <Icon name="MapPin" size={14} className="text-gray-500" />
+                            <span>{workplace.location}</span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Icon name="Globe" size={14} className="text-gray-500" />
+                            <span>{workplace.ipAddress}</span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Icon name="User" size={14} className="text-gray-500" />
+                            <span>
+                              {assignedUser ? `${assignedUser.fullName} (${assignedUser.department})` : 'Не назначен'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex space-x-2 mt-4 pt-3 border-t">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setActiveSection('components')}
+                            className="flex-1"
+                          >
+                            <Icon name="Edit" size={14} className="mr-1" />
+                            Паспорт
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handlePrintPassport(workplace)}>
+                            <Icon name="Printer" size={14} />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
+
+              {filteredWorkplaces.length === 0 && (
+                <div className="text-center py-12">
+                  <Icon name="Monitor" size={48} className="mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Рабочие места не найдены</h3>
+                  <p className="text-gray-600">Измените параметры поиска или создайте новые паспорта в разделе "Комплектующие".</p>
+                </div>
+              )}
+            </div>
+          )}
 
               {/* Add Workplace Dialog */}
               <Dialog open={isAddWorkplaceOpen} onOpenChange={setIsAddWorkplaceOpen}>
@@ -1472,6 +1496,138 @@ const Index = () => {
 
 
 
+            </div>
+          )}
+
+          {/* Components Section */}
+          {activeSection === 'components' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold">Комплектующие и паспорта</h1>
+                <Button onClick={() => setIsAddWorkplaceOpen(true)}>
+                  <Icon name="Plus" size={16} className="mr-2" />
+                  Добавить паспорт
+                </Button>
+              </div>
+
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Поиск по номеру ПК, компонентам или пользователю..."
+                    value={workplaceSearchTerm}
+                    onChange={(e) => setWorkplaceSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <Select value={workplaceFilterStatus} onValueChange={setWorkplaceFilterStatus}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Фильтр по статусу" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все статусы</SelectItem>
+                    <SelectItem value="active">Активные</SelectItem>
+                    <SelectItem value="inactive">Неактивные</SelectItem>
+                    <SelectItem value="maintenance">Обслуживание</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredWorkplaces.map((workplace) => {
+                  const assignedUser = getWorkplaceUser(workplace.userId);
+                  return (
+                    <Card key={workplace.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg font-bold">
+                            {workplace.computerNumber}
+                          </CardTitle>
+                          <Badge variant={workplace.status === 'active' ? 'default' : workplace.status === 'maintenance' ? 'secondary' : 'outline'}>
+                            {workplace.status === 'active' ? 'Активный' : workplace.status === 'maintenance' ? 'Обслуживание' : 'Неактивный'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{workplace.location}</p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Пользователь */}
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-sm font-medium text-gray-700 mb-1">Пользователь</div>
+                          {assignedUser ? (
+                            <div>
+                              <div className="font-medium">{assignedUser.fullName}</div>
+                              <div className="text-sm text-gray-500">{assignedUser.department}</div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">Не назначен</span>
+                          )}
+                        </div>
+
+                        {/* Основные характеристики */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">IP адрес:</span>
+                            <span className="font-medium">{workplace.ipAddress}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Процессор:</span>
+                            <span className="font-medium text-right flex-1 ml-2" title={workplace.processor}>
+                              {workplace.processor.length > 20 ? `${workplace.processor.substring(0, 20)}...` : workplace.processor}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">ОЗУ:</span>
+                            <span className="font-medium">{workplace.ramAmount}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">ОС:</span>
+                            <span className="font-medium">{workplace.operatingSystem}</span>
+                          </div>
+                        </div>
+
+                        {/* Кнопки действий */}
+                        <div className="flex space-x-2 pt-4 border-t">
+                          <Button variant="outline" size="sm" onClick={() => handleEditWorkplace(workplace)} className="flex-1">
+                            <Icon name="Edit" size={14} className="mr-1" />
+                            Редактировать
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handlePrintPassport(workplace)}>
+                            <Icon name="Printer" size={14} />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <Icon name="Trash2" size={14} />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Удалить паспорт?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Это действие нельзя отменить. Паспорт рабочего места {workplace.computerNumber} будет удален безвозвратно.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteWorkplace(workplace)}>
+                                  Удалить
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {filteredWorkplaces.length === 0 && (
+                <div className="text-center py-12">
+                  <Icon name="HardDrive" size={48} className="mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Паспорта не найдены</h3>
+                  <p className="text-gray-600">Создайте новый паспорт рабочего места или измените параметры поиска.</p>
+                </div>
+              )}
             </div>
           )}
 
