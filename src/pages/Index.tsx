@@ -1471,134 +1471,7 @@ const Index = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* Edit Workplace Dialog */}
-              <Dialog open={isEditWorkplaceOpen} onOpenChange={setIsEditWorkplaceOpen}>
-                <DialogContent className="sm:max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Редактировать рабочее место</DialogTitle>
-                  </DialogHeader>
-                  {editingWorkplace && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="editComputerNumber">Номер компьютера</Label>
-                        <Input
-                          id="editComputerNumber"
-                          value={editingWorkplace.computerNumber}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, computerNumber: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editIpAddress">IP адрес</Label>
-                        <Input
-                          id="editIpAddress"
-                          value={editingWorkplace.ipAddress}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, ipAddress: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editSealNumber">Номер пломбы</Label>
-                        <Input
-                          id="editSealNumber"
-                          value={editingWorkplace.sealNumber}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, sealNumber: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editLocation">Местоположение</Label>
-                        <Input
-                          id="editLocation"
-                          value={editingWorkplace.location}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, location: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editProcessor">Процессор</Label>
-                        <Input
-                          id="editProcessor"
-                          value={editingWorkplace.processor}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, processor: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editHardDrive">Жесткий диск</Label>
-                        <Input
-                          id="editHardDrive"
-                          value={editingWorkplace.hardDrive}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, hardDrive: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editRamAmount">Оперативная память</Label>
-                        <Input
-                          id="editRamAmount"
-                          value={editingWorkplace.ramAmount}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, ramAmount: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editVideoAdapter">Видео адаптер</Label>
-                        <Input
-                          id="editVideoAdapter"
-                          value={editingWorkplace.videoAdapter}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, videoAdapter: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editOperatingSystem">Операционная система</Label>
-                        <Input
-                          id="editOperatingSystem"
-                          value={editingWorkplace.operatingSystem}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, operatingSystem: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editAssemblyDate">Дата сборки</Label>
-                        <Input
-                          id="editAssemblyDate"
-                          value={editingWorkplace.assemblyDate}
-                          onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, assemblyDate: e.target.value } : null)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editStatus">Статус</Label>
-                        <Select value={editingWorkplace.status} onValueChange={(value: 'active' | 'inactive' | 'maintenance') => setEditingWorkplace(prev => prev ? { ...prev, status: value } : null)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="active">Активный</SelectItem>
-                            <SelectItem value="inactive">Неактивный</SelectItem>
-                            <SelectItem value="maintenance">Обслуживание</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="editAssignedUser">Назначить пользователя</Label>
-                        <Select 
-                          value={editingWorkplace.userId || ''} 
-                          onValueChange={(value) => setEditingWorkplace(prev => prev ? { ...prev, userId: value || undefined } : null)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Выберите пользователя" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">Не назначать</SelectItem>
-                            {users.map((user) => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {user.fullName} - {user.department}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsEditWorkplaceOpen(false)}>Отмена</Button>
-                    <Button onClick={handleUpdateWorkplace}>Сохранить</Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+
 
 
             </div>
@@ -1875,6 +1748,135 @@ const Index = () => {
           )}
         </main>
       </div>
+
+      {/* Edit Workplace Dialog */}
+      <Dialog open={isEditWorkplaceOpen} onOpenChange={setIsEditWorkplaceOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Редактировать рабочее место</DialogTitle>
+          </DialogHeader>
+          {editingWorkplace && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="editComputerNumber">Номер компьютера</Label>
+                <Input
+                  id="editComputerNumber"
+                  value={editingWorkplace.computerNumber}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, computerNumber: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editIpAddress">IP адрес</Label>
+                <Input
+                  id="editIpAddress"
+                  value={editingWorkplace.ipAddress}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, ipAddress: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editSealNumber">Номер пломбы</Label>
+                <Input
+                  id="editSealNumber"
+                  value={editingWorkplace.sealNumber}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, sealNumber: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editLocation">Местоположение</Label>
+                <Input
+                  id="editLocation"
+                  value={editingWorkplace.location}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, location: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editProcessor">Процессор</Label>
+                <Input
+                  id="editProcessor"
+                  value={editingWorkplace.processor}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, processor: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editHardDrive">Жесткий диск</Label>
+                <Input
+                  id="editHardDrive"
+                  value={editingWorkplace.hardDrive}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, hardDrive: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRamAmount">Оперативная память</Label>
+                <Input
+                  id="editRamAmount"
+                  value={editingWorkplace.ramAmount}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, ramAmount: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editVideoAdapter">Видео адаптер</Label>
+                <Input
+                  id="editVideoAdapter"
+                  value={editingWorkplace.videoAdapter}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, videoAdapter: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editOperatingSystem">Операционная система</Label>
+                <Input
+                  id="editOperatingSystem"
+                  value={editingWorkplace.operatingSystem}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, operatingSystem: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editAssemblyDate">Дата сборки</Label>
+                <Input
+                  id="editAssemblyDate"
+                  value={editingWorkplace.assemblyDate}
+                  onChange={(e) => setEditingWorkplace(prev => prev ? { ...prev, assemblyDate: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editStatus">Статус</Label>
+                <Select value={editingWorkplace.status} onValueChange={(value: 'active' | 'inactive' | 'maintenance') => setEditingWorkplace(prev => prev ? { ...prev, status: value } : null)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Активный</SelectItem>
+                    <SelectItem value="inactive">Неактивный</SelectItem>
+                    <SelectItem value="maintenance">Обслуживание</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="editAssignedUser">Назначить пользователя</Label>
+                <Select 
+                  value={editingWorkplace.userId || ''} 
+                  onValueChange={(value) => setEditingWorkplace(prev => prev ? { ...prev, userId: value || undefined } : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите пользователя" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Не назначать</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.fullName} - {user.department}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setIsEditWorkplaceOpen(false)}>Отмена</Button>
+            <Button onClick={handleUpdateWorkplace}>Сохранить</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
