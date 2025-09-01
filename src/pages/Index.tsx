@@ -197,6 +197,17 @@ const Index = () => {
   const [isAssignUserOpen, setIsAssignUserOpen] = useState(false);
   const [assigningWorkplace, setAssigningWorkplace] = useState<Workplace | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  
+  const [workplaceSearchTerm, setWorkplaceSearchTerm] = useState('');
+  const [workplaceFilterStatus, setWorkplaceFilterStatus] = useState('all');
+  
+  const [settings, setSettings] = useState({
+    theme: 'blue',
+    compactMode: false,
+    autoSave: true,
+    notifications: true,
+    language: 'ru'
+  });
 
 
 
@@ -208,6 +219,17 @@ const Index = () => {
     const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
     
     return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  const filteredWorkplaces = workplaces.filter(workplace => {
+    const assignedUser = getWorkplaceUser(workplace.userId);
+    const matchesSearch = workplace.computerNumber.toLowerCase().includes(workplaceSearchTerm.toLowerCase()) ||
+                         workplace.ipAddress.toLowerCase().includes(workplaceSearchTerm.toLowerCase()) ||
+                         workplace.location.toLowerCase().includes(workplaceSearchTerm.toLowerCase()) ||
+                         (assignedUser && assignedUser.fullName.toLowerCase().includes(workplaceSearchTerm.toLowerCase()));
+    const matchesStatus = workplaceFilterStatus === 'all' || workplace.status === workplaceFilterStatus;
+    
+    return matchesSearch && matchesStatus;
   });
 
   const handleAddUser = () => {
@@ -310,7 +332,7 @@ const Index = () => {
     setIsAssignUserOpen(true);
   };
 
-  const handleAssignWorkplace = () => {
+  const handleConfirmAssignWorkplace = () => {
     if (!assigningWorkplace) return;
     
     setWorkplaces(prev => prev.map(wp => 
@@ -1133,6 +1155,28 @@ const Index = () => {
                 </div>
               </div>
 
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Поиск по номеру ПК, IP, местоположению или пользователю..."
+                    value={workplaceSearchTerm}
+                    onChange={(e) => setWorkplaceSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <Select value={workplaceFilterStatus} onValueChange={setWorkplaceFilterStatus}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Фильтр по статусу" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все статусы</SelectItem>
+                    <SelectItem value="active">Активные</SelectItem>
+                    <SelectItem value="inactive">Неактивные</SelectItem>
+                    <SelectItem value="maintenance">Обслуживание</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="bg-white rounded-lg border">
                 <Table>
                   <TableHeader>
@@ -1146,7 +1190,7 @@ const Index = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {workplaces.map((workplace) => {
+                    {filteredWorkplaces.map((workplace) => {
                       const assignedUser = getWorkplaceUser(workplace.userId);
                       return (
                         <TableRow key={workplace.id}>
@@ -1476,7 +1520,7 @@ const Index = () => {
                     <Button variant="outline" onClick={() => setIsAssignUserOpen(false)}>
                       Отмена
                     </Button>
-                    <Button onClick={handleAssignWorkplace}>
+                    <Button onClick={handleConfirmAssignWorkplace}>
                       {selectedUserId ? 'Назначить' : 'Убрать назначение'}
                     </Button>
                   </div>
@@ -1485,8 +1529,205 @@ const Index = () => {
             </div>
           )}
 
+          {/* Settings Section */}
+          {activeSection === 'settings' && (
+            <div className="space-y-6">
+              <h1 className="text-3xl font-bold">Настройки системы</h1>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Theme Settings */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Цветовая тема</CardTitle>
+                    <p className="text-sm text-gray-600">Выберите цветовую схему интерфейса</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { value: 'blue', name: 'Синяя', color: 'bg-blue-500' },
+                        { value: 'green', name: 'Зеленая', color: 'bg-green-500' },
+                        { value: 'purple', name: 'Фиолетовая', color: 'bg-purple-500' },
+                        { value: 'orange', name: 'Оранжевая', color: 'bg-orange-500' }
+                      ].map((theme) => (
+                        <button
+                          key={theme.value}
+                          onClick={() => setSettings(prev => ({ ...prev, theme: theme.value }))}
+                          className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-colors ${
+                            settings.theme === theme.value ? 'border-primary bg-primary/10' : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded-full ${theme.color}`}></div>
+                          <span className="font-medium">{theme.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Interface Settings */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Интерфейс</CardTitle>
+                    <p className="text-sm text-gray-600">Настройки отображения и поведения</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">Компактный режим</div>
+                        <div className="text-sm text-gray-600">Уменьшенные отступы и размеры</div>
+                      </div>
+                      <Button
+                        variant={settings.compactMode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSettings(prev => ({ ...prev, compactMode: !prev.compactMode }))}
+                      >
+                        {settings.compactMode ? 'Вкл' : 'Выкл'}
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">Автосохранение</div>
+                        <div className="text-sm text-gray-600">Автоматическое сохранение изменений</div>
+                      </div>
+                      <Button
+                        variant={settings.autoSave ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSettings(prev => ({ ...prev, autoSave: !prev.autoSave }))}
+                      >
+                        {settings.autoSave ? 'Вкл' : 'Выкл'}
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">Уведомления</div>
+                        <div className="text-sm text-gray-600">Показывать всплывающие уведомления</div>
+                      </div>
+                      <Button
+                        variant={settings.notifications ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSettings(prev => ({ ...prev, notifications: !prev.notifications }))}
+                      >
+                        {settings.notifications ? 'Вкл' : 'Выкл'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* System Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Информация о системе</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Версия системы:</span>
+                      <span className="font-medium">v2.1.0</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Последнее обновление:</span>
+                      <span className="font-medium">15.01.2024</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Активных пользователей:</span>
+                      <span className="font-medium">{users.filter(u => u.status === 'active').length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Рабочих мест:</span>
+                      <span className="font-medium">{workplaces.length}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Backup and Export */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Резервное копирование</CardTitle>
+                    <p className="text-sm text-gray-600">Экспорт и импорт данных</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button className="w-full" variant="outline">
+                      <Icon name="Download" size={16} className="mr-2" />
+                      Экспорт всех данных
+                    </Button>
+                    <Button className="w-full" variant="outline">
+                      <Icon name="Upload" size={16} className="mr-2" />
+                      Импорт данных
+                    </Button>
+                    <div className="pt-2 border-t">
+                      <div className="text-sm text-gray-600 mb-2">Последний бэкап:</div>
+                      <div className="text-sm font-medium">14.01.2024, 18:30</div>
+                      <Button size="sm" variant="ghost" className="mt-2 text-blue-600">
+                        Создать резервную копию
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Security Settings */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Безопасность</CardTitle>
+                    <p className="text-sm text-gray-600">Настройки безопасности системы</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">Двухфакторная аутентификация</div>
+                        <div className="text-sm text-gray-600">Дополнительная защита аккаунта</div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Настроить
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">Автоматический выход</div>
+                        <div className="text-sm text-gray-600">Выход через 30 минут бездействия</div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Изменить
+                      </Button>
+                    </div>
+                    <Button className="w-full" variant="outline">
+                      <Icon name="Shield" size={16} className="mr-2" />
+                      Журнал безопасности
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Advanced Settings */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Расширенные настройки</CardTitle>
+                    <p className="text-sm text-gray-600">Настройки для опытных пользователей</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button className="w-full" variant="outline">
+                      <Icon name="Database" size={16} className="mr-2" />
+                      Управление базой данных
+                    </Button>
+                    <Button className="w-full" variant="outline">
+                      <Icon name="Settings2" size={16} className="mr-2" />
+                      Системные параметры
+                    </Button>
+                    <Button className="w-full" variant="outline">
+                      <Icon name="Terminal" size={16} className="mr-2" />
+                      Консоль администратора
+                    </Button>
+                    <div className="pt-2 border-t">
+                      <Button className="w-full" variant="destructive" size="sm">
+                        <Icon name="RotateCcw" size={16} className="mr-2" />
+                        Сбросить все настройки
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
           {/* Other sections placeholder */}
-          {activeSection !== 'dashboard' && activeSection !== 'users' && activeSection !== 'workplaces' && (
+          {activeSection !== 'dashboard' && activeSection !== 'users' && activeSection !== 'workplaces' && activeSection !== 'settings' && (
             <div className="flex items-center justify-center h-96">
               <div className="text-center">
                 <Icon name="Construction" size={48} className="mx-auto mb-4 text-gray-400" />
