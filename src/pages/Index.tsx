@@ -247,8 +247,13 @@ const Index = () => {
   });
 
   const handleAddUser = () => {
+    if (!newUser.fullName || !newUser.email || !newUser.password) {
+      showNotification('Заполните все обязательные поля', 'error');
+      return;
+    }
+    
     if (newUser.password !== newUser.confirmPassword) {
-      alert('Пароли не совпадают!');
+      showNotification('Пароли не совпадают!', 'error');
       return;
     }
     
@@ -569,9 +574,7 @@ const Index = () => {
     { id: 'users', label: 'Пользователи', icon: 'Users' },
     { id: 'workplaces', label: 'Рабочие места', icon: 'Monitor' },
     { id: 'components', label: 'Комплектующие', icon: 'HardDrive' },
-    { id: 'reports', label: 'Отчеты', icon: 'FileText' },
     { id: 'settings', label: 'Настройки', icon: 'Settings' },
-    { id: 'print', label: 'Печать', icon: 'Printer' },
   ];
 
   const handleLogin = (e: React.FormEvent) => {
@@ -1349,8 +1352,16 @@ const Index = () => {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            onClick={() => setActiveSection('components')}
+                            onClick={() => handleOpenAssignUser(workplace)}
                             className="flex-1"
+                          >
+                            <Icon name="UserPlus" size={14} className="mr-1" />
+                            {assignedUser ? 'Сменить' : 'Назначить'}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setActiveSection('components')}
                           >
                             <Icon name="Edit" size={14} className="mr-1" />
                             Паспорт
@@ -2071,6 +2082,53 @@ const Index = () => {
             <Button onClick={handleUpdateWorkplace} disabled={!editingWorkplace}>
               Сохранить изменения
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign User Dialog */}
+      <Dialog open={isAssignUserOpen} onOpenChange={setIsAssignUserOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {assigningWorkplace && `Назначить пользователя на ${assigningWorkplace.computerNumber}`}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="selectUser">Выберите пользователя</Label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите пользователя" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Снять назначение</SelectItem>
+                  {users
+                    .filter(user => user.status === 'active')
+                    .map((user) => {
+                      const isAssigned = workplaces.some(wp => wp.userId === user.id && wp.id !== assigningWorkplace?.id);
+                      return (
+                        <SelectItem key={user.id} value={user.id} disabled={isAssigned}>
+                          {user.fullName} - {user.department}
+                          {isAssigned && ' (уже назначен)'}
+                        </SelectItem>
+                      );
+                    })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => {
+                setIsAssignUserOpen(false);
+                setAssigningWorkplace(null);
+                setSelectedUserId('');
+              }}>
+                Отмена
+              </Button>
+              <Button onClick={handleConfirmAssignWorkplace}>
+                Назначить
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
