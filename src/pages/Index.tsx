@@ -1375,126 +1375,6 @@ const Index = () => {
             </div>
           )}
 
-
-              <Dialog open={isAddWorkplaceOpen} onOpenChange={setIsAddWorkplaceOpen}>
-                <DialogContent className="sm:max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Добавить рабочее место</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="computerNumber">Номер компьютера</Label>
-                      <Input
-                        id="computerNumber"
-                        value={newWorkplace.computerNumber}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, computerNumber: e.target.value }))}
-                        placeholder="PC-001"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="ipAddress">IP адрес</Label>
-                      <Input
-                        id="ipAddress"
-                        value={newWorkplace.ipAddress}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, ipAddress: e.target.value }))}
-                        placeholder="192.168.1.101"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="sealNumber">Номер пломбы</Label>
-                      <Input
-                        id="sealNumber"
-                        value={newWorkplace.sealNumber}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, sealNumber: e.target.value }))}
-                        placeholder="SEAL-001"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="location">Местоположение</Label>
-                      <Input
-                        id="location"
-                        value={newWorkplace.location}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, location: e.target.value }))}
-                        placeholder="Кабинет 205"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="processor">Процессор</Label>
-                      <Input
-                        id="processor"
-                        value={newWorkplace.processor}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, processor: e.target.value }))}
-                        placeholder="Intel Core i5-12400F"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="hardDrive">Жесткий диск</Label>
-                      <Input
-                        id="hardDrive"
-                        value={newWorkplace.hardDrive}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, hardDrive: e.target.value }))}
-                        placeholder="SSD 512GB Samsung 980"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="ramAmount">Оперативная память</Label>
-                      <Input
-                        id="ramAmount"
-                        value={newWorkplace.ramAmount}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, ramAmount: e.target.value }))}
-                        placeholder="16 ГБ DDR4-3200"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="videoAdapter">Видео адаптер</Label>
-                      <Input
-                        id="videoAdapter"
-                        value={newWorkplace.videoAdapter}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, videoAdapter: e.target.value }))}
-                        placeholder="NVIDIA GTX 1660 Super"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="operatingSystem">Операционная система</Label>
-                      <Input
-                        id="operatingSystem"
-                        value={newWorkplace.operatingSystem}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, operatingSystem: e.target.value }))}
-                        placeholder="Windows 11 Pro"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="assemblyDate">Дата сборки</Label>
-                      <Input
-                        id="assemblyDate"
-                        value={newWorkplace.assemblyDate}
-                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, assemblyDate: e.target.value }))}
-                        placeholder="15.01.2024"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label htmlFor="status">Статус</Label>
-                      <Select value={newWorkplace.status} onValueChange={(value: 'active' | 'inactive' | 'maintenance') => setNewWorkplace(prev => ({ ...prev, status: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Активный</SelectItem>
-                          <SelectItem value="inactive">Неактивный</SelectItem>
-                          <SelectItem value="maintenance">Обслуживание</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsAddWorkplaceOpen(false)}>Отмена</Button>
-                    <Button onClick={handleAddWorkplace}>Добавить</Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
-
           {/* Components Section */}
           {activeSection === 'components' && (
             <div className="space-y-6">
@@ -1624,6 +1504,124 @@ const Index = () => {
                   <p className="text-gray-600">Создайте новый паспорт рабочего места или измените параметры поиска.</p>
                 </div>
               )}
+
+              {/* Add Workplace Dialog */}
+              <Dialog open={isAddWorkplaceOpen} onOpenChange={setIsAddWorkplaceOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Добавить рабочее место</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="computerNumber">Номер компьютера</Label>
+                      <Input
+                        id="computerNumber"
+                        value={newWorkplace.computerNumber}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, computerNumber: e.target.value }))}
+                        placeholder="PC-001"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ipAddress">IP адрес</Label>
+                      <Input
+                        id="ipAddress"
+                        value={newWorkplace.ipAddress}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, ipAddress: e.target.value }))}
+                        placeholder="192.168.1.101"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sealNumber">Номер пломбы</Label>
+                      <Input
+                        id="sealNumber"
+                        value={newWorkplace.sealNumber}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, sealNumber: e.target.value }))}
+                        placeholder="SEAL-001"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="location">Местоположение</Label>
+                      <Input
+                        id="location"
+                        value={newWorkplace.location}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, location: e.target.value }))}
+                        placeholder="Кабинет 205"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="processor">Процессор</Label>
+                      <Input
+                        id="processor"
+                        value={newWorkplace.processor}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, processor: e.target.value }))}
+                        placeholder="Intel Core i5-12400F"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="hardDrive">Жесткий диск</Label>
+                      <Input
+                        id="hardDrive"
+                        value={newWorkplace.hardDrive}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, hardDrive: e.target.value }))}
+                        placeholder="SSD 512GB Samsung 980"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ramAmount">Оперативная память</Label>
+                      <Input
+                        id="ramAmount"
+                        value={newWorkplace.ramAmount}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, ramAmount: e.target.value }))}
+                        placeholder="16 ГБ DDR4-3200"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="videoAdapter">Видео адаптер</Label>
+                      <Input
+                        id="videoAdapter"
+                        value={newWorkplace.videoAdapter}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, videoAdapter: e.target.value }))}
+                        placeholder="NVIDIA GTX 1660 Super"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="operatingSystem">Операционная система</Label>
+                      <Input
+                        id="operatingSystem"
+                        value={newWorkplace.operatingSystem}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, operatingSystem: e.target.value }))}
+                        placeholder="Windows 11 Pro"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="assemblyDate">Дата сборки</Label>
+                      <Input
+                        id="assemblyDate"
+                        value={newWorkplace.assemblyDate}
+                        onChange={(e) => setNewWorkplace(prev => ({ ...prev, assemblyDate: e.target.value }))}
+                        placeholder="15.01.2024"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Label htmlFor="status">Статус</Label>
+                      <Select value={newWorkplace.status} onValueChange={(value: 'active' | 'inactive' | 'maintenance') => setNewWorkplace(prev => ({ ...prev, status: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Активный</SelectItem>
+                          <SelectItem value="inactive">Неактивный</SelectItem>
+                          <SelectItem value="maintenance">Обслуживание</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsAddWorkplaceOpen(false)}>Отмена</Button>
+                    <Button onClick={handleAddWorkplace}>Добавить</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
 
