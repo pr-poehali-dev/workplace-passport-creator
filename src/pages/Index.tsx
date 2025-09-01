@@ -221,6 +221,10 @@ const Index = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  const getWorkplaceUser = (userId?: string) => {
+    return userId ? users.find(u => u.id === userId) : null;
+  };
+
   const filteredWorkplaces = workplaces.filter(workplace => {
     const assignedUser = getWorkplaceUser(workplace.userId);
     const matchesSearch = workplace.computerNumber.toLowerCase().includes(workplaceSearchTerm.toLowerCase()) ||
@@ -342,10 +346,6 @@ const Index = () => {
     setIsAssignUserOpen(false);
     setAssigningWorkplace(null);
     setSelectedUserId('');
-  };
-
-  const getWorkplaceUser = (userId?: string) => {
-    return userId ? users.find(u => u.id === userId) : null;
   };
 
   const handlePrintPassport = (workplace: Workplace) => {
