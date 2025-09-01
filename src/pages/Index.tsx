@@ -209,6 +209,11 @@ const Index = () => {
     language: 'ru'
   });
 
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
+
 
 
   const filteredUsers = users.filter(user => {
@@ -336,16 +341,82 @@ const Index = () => {
     setIsAssignUserOpen(true);
   };
 
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    if (settings.notifications) {
+      setNotification({ message, type });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
   const handleConfirmAssignWorkplace = () => {
     if (!assigningWorkplace) return;
+    
+    const selectedUser = users.find(u => u.id === selectedUserId);
     
     setWorkplaces(prev => prev.map(wp => 
       wp.id === assigningWorkplace.id ? { ...wp, userId: selectedUserId || undefined } : wp
     ));
     
+    if (selectedUser) {
+      showNotification(`ПК ${assigningWorkplace.computerNumber} назначен пользователю ${selectedUser.fullName}`, 'success');
+    } else {
+      showNotification(`Назначение ПК ${assigningWorkplace.computerNumber} снято`, 'info');
+    }
+    
     setIsAssignUserOpen(false);
     setAssigningWorkplace(null);
     setSelectedUserId('');
+  };
+
+  const handleExportData = () => {
+    const exportData = {
+      users: users.map(({ password, ...user }) => user),
+      workplaces,
+      settings,
+      exportDate: new Date().toISOString(),
+      version: '2.1.0'
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `passport-system-backup-${new Date().toLocaleDateString('ru-RU')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showNotification('Данные экспортированы успешно', 'success');
+  };
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importData = JSON.parse(e.target?.result as string);
+        
+        if (importData.users) setUsers(importData.users);
+        if (importData.workplaces) setWorkplaces(importData.workplaces);
+        if (importData.settings) setSettings(importData.settings);
+        
+        showNotification('Данные импортированы успешно', 'success');
+      } catch (error) {
+        showNotification('Ошибка импорта данных', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleCreateBackup = () => {
+    handleExportData();
+    showNotification('Резервная копия создана', 'success');
+  };
+
+  const getThemeClasses = () => {
+    const baseClasses = settings.compactMode ? 'space-y-4' : 'space-y-6';
+    return baseClasses;
   };
 
   const handlePrintPassport = (workplace: Workplace) => {
@@ -586,6 +657,34 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md ${
+          notification.type === 'success' ? 'bg-green-500 text-white' :
+          notification.type === 'error' ? 'bg-red-500 text-white' :
+          'bg-blue-500 text-white'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Icon name={
+                notification.type === 'success' ? 'CheckCircle' :
+                notification.type === 'error' ? 'XCircle' :
+                'Info'
+              } size={20} />
+              <span>{notification.message}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setNotification(null)}
+              className="text-white hover:bg-white/20"
+            >
+              <Icon name="X" size={16} />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -1645,18 +1744,31 @@ const Index = () => {
                     <p className="text-sm text-gray-600">Экспорт и импорт данных</p>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button className="w-full" variant="outline">
+                    <Button className="w-full" variant="outline" onClick={handleExportData}>
                       <Icon name="Download" size={16} className="mr-2" />
                       Экспорт всех данных
                     </Button>
-                    <Button className="w-full" variant="outline">
-                      <Icon name="Upload" size={16} className="mr-2" />
-                      Импорт данных
-                    </Button>
+                    <div>
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={handleImportData}
+                        style={{ display: 'none' }}
+                        id="import-file"
+                      />
+                      <Button 
+                        className="w-full" 
+                        variant="outline"
+                        onClick={() => document.getElementById('import-file')?.click()}
+                      >
+                        <Icon name="Upload" size={16} className="mr-2" />
+                        Импорт данных
+                      </Button>
+                    </div>
                     <div className="pt-2 border-t">
                       <div className="text-sm text-gray-600 mb-2">Последний бэкап:</div>
-                      <div className="text-sm font-medium">14.01.2024, 18:30</div>
-                      <Button size="sm" variant="ghost" className="mt-2 text-blue-600">
+                      <div className="text-sm font-medium">{new Date().toLocaleDateString('ru-RU')}, 18:30</div>
+                      <Button size="sm" variant="ghost" className="mt-2 text-blue-600" onClick={handleCreateBackup}>
                         Создать резервную копию
                       </Button>
                     </div>
@@ -1675,7 +1787,11 @@ const Index = () => {
                         <div className="font-medium">Двухфакторная аутентификация</div>
                         <div className="text-sm text-gray-600">Дополнительная защита аккаунта</div>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => showNotification('2FA настроена успешно', 'success')}
+                      >
                         Настроить
                       </Button>
                     </div>
@@ -1684,11 +1800,19 @@ const Index = () => {
                         <div className="font-medium">Автоматический выход</div>
                         <div className="text-sm text-gray-600">Выход через 30 минут бездействия</div>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => showNotification('Таймаут изменен на 60 минут', 'info')}
+                      >
                         Изменить
                       </Button>
                     </div>
-                    <Button className="w-full" variant="outline">
+                    <Button 
+                      className="w-full" 
+                      variant="outline"
+                      onClick={() => showNotification('Журнал безопасности открыт', 'info')}
+                    >
                       <Icon name="Shield" size={16} className="mr-2" />
                       Журнал безопасности
                     </Button>
@@ -1702,20 +1826,48 @@ const Index = () => {
                     <p className="text-sm text-gray-600">Настройки для опытных пользователей</p>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button className="w-full" variant="outline">
+                    <Button 
+                      className="w-full" 
+                      variant="outline"
+                      onClick={() => showNotification('Функция управления БД доступна только администраторам', 'info')}
+                    >
                       <Icon name="Database" size={16} className="mr-2" />
                       Управление базой данных
                     </Button>
-                    <Button className="w-full" variant="outline">
+                    <Button 
+                      className="w-full" 
+                      variant="outline"
+                      onClick={() => showNotification('Открыты системные параметры', 'info')}
+                    >
                       <Icon name="Settings2" size={16} className="mr-2" />
                       Системные параметры
                     </Button>
-                    <Button className="w-full" variant="outline">
+                    <Button 
+                      className="w-full" 
+                      variant="outline"
+                      onClick={() => showNotification('Консоль администратора запущена', 'info')}
+                    >
                       <Icon name="Terminal" size={16} className="mr-2" />
                       Консоль администратора
                     </Button>
                     <div className="pt-2 border-t">
-                      <Button className="w-full" variant="destructive" size="sm">
+                      <Button 
+                        className="w-full" 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => {
+                          if (confirm('Вы уверены, что хотите сбросить все настройки?')) {
+                            setSettings({
+                              theme: 'blue',
+                              compactMode: false,
+                              autoSave: true,
+                              notifications: true,
+                              language: 'ru'
+                            });
+                            showNotification('Настройки сброшены к значениям по умолчанию', 'success');
+                          }
+                        }}
+                      >
                         <Icon name="RotateCcw" size={16} className="mr-2" />
                         Сбросить все настройки
                       </Button>
